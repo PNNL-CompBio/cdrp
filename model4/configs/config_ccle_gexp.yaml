@@ -1,0 +1,6 @@
+epochs: 100
+data_type: CCLE
+metric: auc
+out_dir: ccle_gexp
+cuda_id: 4
+use_proteomics_data: 0 # 0: use gene expression, 1: use proteomics

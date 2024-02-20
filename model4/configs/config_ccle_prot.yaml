@@ -1,0 +1,5 @@
+epochs: 100
+data_type: CCLE
+metric: auc
+out_dir: ccle_prot
+cuda_id: 2
