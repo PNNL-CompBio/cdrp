@@ -1,0 +1,13 @@
+omegaconf
+pandas
+rdkit
+torch
+torch-geometric
+scikit-learn
+matplotlib
+tqdm
+mordred
+numpy
+pickle5
+urllib3
+subword_nmt

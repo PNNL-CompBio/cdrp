@@ -1,0 +1,4 @@
+Test RMSE for different seeds:
+Seed	Test RMSE
+1	0.35169869661331177
+2	0.353742778301239
