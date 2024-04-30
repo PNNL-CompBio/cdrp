@@ -349,7 +349,48 @@ class DataProcessor:
 
         # Save the wide-format DataFrame to the specified output file in the "shared_input" directory
         input_file_name = os.path.basename(input_file_path)
-        output_file_name = input_file_name.replace(".csv.gz", "_wide.tsv")
+        # output_file_name = input_file_name.replace(".csv.gz", "_wide.tsv")
+        output_file_path = os.path.join("./shared_input", input_file_name+"_wide.tsv")
+        df_wide.to_csv(output_file_path, sep=sep, index=False)
+
+    def CNV_convert_long_to_wide_format(input_file_path: str, sep: str = '\t') -> None:
+        # Load the long-format copy number data
+        if input_file_path.endswith('.gz'):
+            df_long = pd.read_csv(input_file_path, compression='gzip')
+        else:
+            df_long = pd.read_csv(input_file_path)
+
+        # if the df_long has a column named 'copy_number', change column name to 'CNV'
+        if 'copy_number' in df_long.columns:
+            df_long.rename(columns={'copy_number': 'CNV'}, inplace=True)
+
+        # Pivot the DataFrame to wide format
+        df_wide = df_long.pivot_table(index='improve_sample_id', columns='entrez_id', values='CNV', aggfunc='first')
+
+        # Reset the index to make `improve_sample_id` a column again, and fill NaN values with 0
+        df_wide.reset_index(inplace=True)
+        df_wide.fillna(0, inplace=True)
+
+        # Process to remove decimal points from column names (if any)
+        new_columns = {}
+        for col in df_wide.columns:
+            try:
+                # Attempt to convert column names to float then to int and back to string
+                # This will be done for columns that are not 'improve_sample_id'
+                if col != 'improve_sample_id':
+                    new_col = str(int(float(col)))
+                    new_columns[col] = new_col
+            except ValueError:
+                # In case the column name is not a float, keep it as is
+                pass
+
+        # Update the DataFrame columns if there are any to update
+        if new_columns:
+            df_wide.rename(columns=new_columns, inplace=True)
+
+        # Save the wide-format DataFrame to the specified output file in the "shared_input" directory
+        input_file_name = os.path.basename(input_file_path)
+        output_file_name = input_file_name.replace(".csv.gz", "_wide.tsv").replace(".csv", "_wide.tsv")
         output_file_path = os.path.join("./shared_input", output_file_name)
         df_wide.to_csv(output_file_path, sep=sep, index=False)
 
@@ -496,6 +537,48 @@ def check_for_atoms_without_neighbors(smiles):
 
 # function that will average auc values for the same improve_sample_id and improve_drug_id
 def average_auc(df):
+    # This will convert non-numeric values to NaN
+    df['auc'] = pd.to_numeric(df['auc'], errors='coerce')
     df['auc'] = df.groupby(['improve_sample_id', 'improve_drug_id'])['auc'].transform('mean')
     df = df.drop_duplicates(subset=['improve_sample_id', 'improve_drug_id'])
     return df
+
+def average_ic50(df):
+    # This will convert non-numeric values to NaN
+    df['ic50'] = pd.to_numeric(df['ic50'], errors='coerce')
+    df['ic50'] = df.groupby(['improve_sample_id', 'improve_drug_id'])['ic50'].transform('mean')
+    df = df.drop_duplicates(subset=['improve_sample_id', 'improve_drug_id'])
+    return df
+
+
+# updated version of coderdata
+def average_dose_response_value(df):
+    # This will convert non-numeric values to NaN
+    df['dose_response_value'] = pd.to_numeric(df['dose_response_value'], errors='coerce')
+    df['dose_response_value'] = df.groupby(['improve_sample_id', 'improve_drug_id'])['dose_response_value'].transform('mean')
+    df = df.drop_duplicates(subset=['improve_sample_id', 'improve_drug_id'])
+    return df
+
+def filter_exp_data(train_exp, study_description, dose_response_metric):
+    # List available studies from the 'study' column
+    available_studies = train_exp['study'].unique()
+    
+    # Check if the user-provided study description is in the available studies
+    if study_description not in available_studies:
+        # If not, return an error with a list of available studies
+        raise ValueError(f"Study description '{study_description}' not found. Available studies: {', '.join(available_studies)}")
+    
+    # Subset based on the study description
+    filtered_train_exp = train_exp[train_exp['study'].str.contains(study_description)]
+    
+    # Now, filter based on dose response metric
+    # This assumes 'metric' is the column where dose_response_metric values are stored
+    if dose_response_metric not in filtered_train_exp['dose_response_metric'].unique():
+        # If the dose_response_metric is not found in the filtered dataset, return an error
+        available_metrics = ', '.join(filtered_train_exp['dose_response_metric'].unique())
+        raise ValueError(f"Dose response metric '{dose_response_metric}' not found. Available metrics in '{study_description}': {available_metrics}")
+    
+    # Further filtering by dose response metric
+    final_filtered_exp = filtered_train_exp[filtered_train_exp['dose_response_metric'] == dose_response_metric]
+    
+    return final_filtered_exp
