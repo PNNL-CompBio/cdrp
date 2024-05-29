@@ -75,27 +75,33 @@ def plot_results(true_values, predicted_values, ckpt_path):
     plt.savefig(f'plots/{ckpt_path}_true_vs_predicted.png')
 
 def split_df(df, seed):
-    train, val = train_test_split(df, random_state=seed, test_size=0.2, train_size=0.8)
-
+    # Split the data into 70% train and 30% test
+    train, test = train_test_split(df, random_state=seed, test_size=0.3)
+    
+    # Further split the train set into 50% train and 50% validation
+    train, val = train_test_split(train, random_state=seed, test_size=0.5)
+    
+    # Reset index for all splits
     train.reset_index(drop=True, inplace=True)
     val.reset_index(drop=True, inplace=True)
-    return train, val
+    test.reset_index(drop=True, inplace=True)
+    
+    return train, val, test
 
 selected_gene_df = pd.read_csv("./shared_input/graphDRP_landmark_genes_map.txt", sep='\t')
-def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
+def intersect_columns(train_gene_exp, selected_gene_df):
     # Extract the gene names from the second column of selected_gene_df
     selected_genes = selected_gene_df.iloc[:, 1].tolist()
     # Convert gene IDs to string because DataFrame columns are strings
     selected_genes_str = [str(float(gene)) for gene in selected_genes]
-    # Find common genes between selected_genes and the columns of the input DataFrames
-    common_columns = list(set(selected_genes_str).intersection(set(test_gene_exp.columns), set(train_gene_exp.columns)))
-    # Ensure "improve_sample_id" is included if it exists in both DataFrames
-    if "improve_sample_id" in test_gene_exp.columns and "improve_sample_id" in train_gene_exp.columns:
+    # Find common genes between selected_genes and the columns of the input DataFrame
+    common_columns = list(set(selected_genes_str).intersection(set(train_gene_exp.columns)))
+    # Ensure "improve_sample_id" is included if it exists in the DataFrame
+    if "improve_sample_id" in train_gene_exp.columns:
         common_columns = ["improve_sample_id"] + common_columns
-    # Subset both DataFrames to only include the common columns
-    test_gene_exp_filtered = test_gene_exp[common_columns]
+    # Subset the DataFrame to only include the common columns
     train_gene_exp_filtered = train_gene_exp[common_columns]
-    return test_gene_exp_filtered, train_gene_exp_filtered
+    return train_gene_exp_filtered
 
 ##############################
 # DATA PROCESSING
@@ -106,85 +112,45 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
                     train_input_path,
                     train_exp_input_path,
                     train_drugs_input_path,
-                    test_input_path,
-                    test_exp_input_path,
-                    test_drugs_input_path, load_trained_model,
+                    load_trained_model,
                     study_description, dose_response_metric,
-                    ckpt_path, train_log_transform=False
+                    ckpt_path, output_prefix, train_log_transform, test_log_transform
                     ):
     
     # Convert to absolute paths
-    test_input_path = os.path.abspath(test_input_path)
     train_input_path = os.path.abspath(train_input_path)
-    
     # Now, extract the filename for use in constructing new paths
-    test_input_filename = os.path.basename(test_input_path)
     train_input_filename = os.path.basename(train_input_path)   
-
-    if not os.path.exists(os.path.join("./shared_input", test_input_filename+"_wide.tsv")):
-        DataProcessor.convert_long_to_wide_format(test_input_path)
-    test_gene_exp = pd.read_csv(os.path.join("./shared_input", test_input_filename+"_wide.tsv"), sep='\t')
 
     if not os.path.exists(os.path.join("./shared_input", train_input_filename+"_wide.tsv")):
         DataProcessor.convert_long_to_wide_format(train_input_path)
     train_gene_exp = pd.read_csv(os.path.join("./shared_input", train_input_filename+"_wide.tsv"), sep='\t')
-    test_gene_exp, train_gene_exp = intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df)
-
-    # test: process experiment & drug data
-    test_exp = pd.read_csv(test_exp_input_path, compression='gzip') if test_exp_input_path.endswith('.gz') else pd.read_csv(test_exp_input_path) # quick fix for mpnst
-    # test_exp = pd.read_csv(test_exp_input_path, compression='gzip') if test_exp_input_path.endswith('.gz') else pd.read_csv(test_exp_input_path, sep='\t')
-    test_drugs = pd.read_csv(test_drugs_input_path, sep='\t', compression='gzip') if test_drugs_input_path.endswith('.gz') else pd.read_csv(test_drugs_input_path, sep='\t')
-    # average auc values for the same improve_sample_id and drug_id
-    test_exp = average_auc(test_exp) #outdated
-    # test_exp = average_dose_response_value(test_exp)
-    # add smiles and split data
-    test_df_all = add_smiles(test_drugs, test_exp, "auc") #outdated
-    # test_df_all = add_smiles(test_drugs, test_exp, "dose_response_value")
+    train_gene_exp = intersect_columns(train_gene_exp, selected_gene_df)
     # train: process experiment & drug data
     train_exp = pd.read_csv(train_exp_input_path, compression='gzip') if train_exp_input_path.endswith('.gz') else pd.read_csv(train_exp_input_path, sep='\t')
     train_drugs = pd.read_csv(train_drugs_input_path, sep='\t', compression='gzip') if train_drugs_input_path.endswith('.gz') else pd.read_csv(train_drugs_input_path, sep='\t')
     
-    # would need to add for test_exp later on once the data is updated
+    # filter exp data based on the stated study description and does response metric (if the dataset is from broad_sanger)
     try:
         train_exp = filter_exp_data(train_exp, study_description,dose_response_metric)
     except ValueError as e:
         print(e)
     
     # average auc values for the same improve_sample_id and drug_id
-    # train_exp = average_auc(train_exp) #outdated
     train_exp = average_dose_response_value(train_exp)
     # add smiles and split data
-    # train_df_all = add_smiles(train_drugs, train_exp, "auc") #outdated
     train_df_all = add_smiles(train_drugs, train_exp, "dose_response_value")
     # merge and split the data
-    # Find the intersection of improve_sample_id in RNA & drug info
-    test_common_ids = set(test_df_all['improve_sample_id']).intersection(set(test_gene_exp['improve_sample_id']))
-    # Filter RNA & drug to only include rows with improve_sample_id in the intersection
-    test_df = test_df_all[test_df_all['improve_sample_id'].isin(test_common_ids)].reset_index(drop=True) # this is EMPTY FIX!!!
-    test_gene_exp = test_gene_exp[test_gene_exp['improve_sample_id'].isin(test_common_ids)]
-    # test_df = test_df.reset_index(drop=True, inplace=True)
-    test = test_df.reset_index(drop=True, inplace=True)
-
     # Find the intersection of improve_sample_id in RNA & drug
     train_common_ids = set(train_df_all['improve_sample_id'].unique()).intersection(set(train_gene_exp['improve_sample_id'].unique()))
     # Filter RNA & drug to only include rows with improve_sample_id in the intersection
     train_df = train_df_all[train_df_all['improve_sample_id'].isin(train_common_ids)].reset_index(drop=True)
     train_gene_exp = train_gene_exp[train_gene_exp['improve_sample_id'].isin(train_common_ids)]
-    train, val= split_df(df=train_df, seed=data_split_seed)
+    
+    # HERE PAY ATTENTION BECAUSE YOU WANT TRAIN TEST SPLIT HERE TRAIN AND EVALUATE THIS DATASET.
+    train, val, test= split_df(df=train_df, seed=data_split_seed)
 
-    # test: Ensure improve_sample_id is set as the index before scaling
-    test_gene_exp = test_gene_exp.set_index('improve_sample_id')
-    # Now perform the scaling operation on the DataFrame without the index column
-    scaler = StandardScaler() # mean=0, unit variance
-    test_gene_exp_scaled = scaler.fit_transform(test_gene_exp)
-    # When creating the new DataFrame, use the same columns as the gene_exp DataFrame
-    # Because gene_exp now does not include 'improve_sample_id' column, we don't need to adjust column names
-    test_gene_exp_scaled = pd.DataFrame(test_gene_exp_scaled, index=test_gene_exp.index, columns=test_gene_exp.columns)
-    data_creater = CreateData(gexp=test_gene_exp_scaled, encoder_type='transformer', metric="auc", data_path= "shared_input/") # outdated
-    # data_creater = CreateData(gexp=test_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/")
-    test_ds = data_creater.create_data(test_df)
-
-    # bealaml: Ensure improve_sample_id is set as the index before scaling
+    # Ensure improve_sample_id is set as the index before scaling
     train_gene_exp = train_gene_exp.set_index('improve_sample_id')
     # if the training data requires log_transform
     if train_log_transform == True:
@@ -195,16 +161,19 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     # When creating the new DataFrame, use the same columns as the gene_exp DataFrame
     # Because gene_exp now does not include 'improve_sample_id' column, we don't need to adjust column names
     train_gene_exp_scaled = pd.DataFrame(train_gene_exp_scaled, index=train_gene_exp.index, columns=train_gene_exp.columns) 
-    data_creater = CreateData(gexp=train_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/") # metric needs to be adjusted based on dose_response_metric
+    data_creater = CreateData(gexp=train_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/") 
     # define the train and val datasets
     train_ds = data_creater.create_data(train)
     val_ds = data_creater.create_data(val)
-    
-    # Device configuration
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    test_ds = data_creater.create_data(test)
 
-    # Model initialization
-    model = Model(gnn_features=None, encoder_type='transformer', n_genes=len(test_gene_exp.columns))
+    # bs = 64
+    # train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
+    # val_loader = DataLoader(val_ds, batch_size=bs, shuffle=False, drop_last=False)
+    # test_loader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = Model(gnn_features = None, encoder_type='transformer',n_genes=len(train_gene_exp.columns)).to(device)
     model.to(device)
 
     # if we have a trained model, skip training and evaluate:
@@ -217,55 +186,55 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
         plot_results(true_values, predicted_values, ckpt_path)
         exit()
 
-    # bs = 64
-    train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
-    val_loader = DataLoader(val_ds, batch_size=bs, shuffle=False, drop_last=False)
-    test_loader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False)
+    # # bs = 64
+    # train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
+    # val_loader = DataLoader(val_ds, batch_size=bs, shuffle=False, drop_last=False)
+    # test_loader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = Model(gnn_features = None, encoder_type='transformer',n_genes=len(test_gene_exp.columns)).to(device)
-    # lr = 1e-4
-    adam = torch.optim.Adam(model.parameters(), lr = lr)
-    optimizer = adam
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # model = Model(gnn_features = None, encoder_type='transformer',n_genes=len(test_gene_exp.columns)).to(device)
+    # # lr = 1e-4
+    # adam = torch.optim.Adam(model.parameters(), lr = lr)
+    # optimizer = adam
 
-    # n_epochs = 100
+    # # n_epochs = 100
 
-    early_stopping = EarlyStopping(patience = n_epochs, verbose=True, chkpoint_name = ckpt_path)
-    criterion = nn.MSELoss()
+    # early_stopping = EarlyStopping(patience = n_epochs, verbose=True, chkpoint_name = ckpt_path)
+    # criterion = nn.MSELoss()
 
     
-    # train the model  
-    hist = {"train_rmse":[], "val_rmse":[]}
-    for epoch in range(0, n_epochs):
-        model.train()
-        loss_all = 0
-        for data in train_loader:
-            data = data.to(device)
-            optimizer.zero_grad()
-            output = model(data)
-            output = output.reshape(-1,)
+    # # train the model  
+    # hist = {"train_rmse":[], "val_rmse":[]}
+    # for epoch in range(0, n_epochs):
+    #     model.train()
+    #     loss_all = 0
+    #     for data in train_loader:
+    #         data = data.to(device)
+    #         optimizer.zero_grad()
+    #         output = model(data)
+    #         output = output.reshape(-1,)
 
-            loss = criterion(output, data.y)
-            loss.backward()
-            optimizer.step()
+    #         loss = criterion(output, data.y)
+    #         loss.backward()
+    #         optimizer.step()
 
 
-        # train_rmse = gnn_utils.test_fn(train_loader, model, device)
-        val_rmse, _, _ = test_fn(val_loader, model, device)
-        early_stopping(val_rmse, model)
+    #     # train_rmse = gnn_utils.test_fn(train_loader, model, device)
+    #     val_rmse, _, _ = test_fn(val_loader, model, device)
+    #     early_stopping(val_rmse, model)
 
-        if early_stopping.early_stop:
-            print("Early stopping")
-            break
+    #     if early_stopping.early_stop:
+    #         print("Early stopping")
+    #         break
 
-        # hist["train_rmse"].append(train_rmse)
-        hist["val_rmse"].append(val_rmse)
-        # print(f'Epoch: {epoch}, Train_rmse: {train_rmse:.3}, Val_rmse: {val_rmse:.3}')
-        print(f'Epoch: {epoch}, Val_rmse: {val_rmse:.3}')
-        model_save_path = f'models/model_seed_{data_split_seed}_epoch_{epoch}.pt'
-        torch.save(model.state_dict(), model_save_path) # save the model for each seed & epoch
-        print("Model saved at", model_save_path)
-    model.load_state_dict(torch.load(ckpt_path))
+    #     # hist["train_rmse"].append(train_rmse)
+    #     hist["val_rmse"].append(val_rmse)
+    #     # print(f'Epoch: {epoch}, Train_rmse: {train_rmse:.3}, Val_rmse: {val_rmse:.3}')
+    #     print(f'Epoch: {epoch}, Val_rmse: {val_rmse:.3}')
+    #     model_save_path = f'models/model_seed_{data_split_seed}_epoch_{epoch}.pt'
+    #     torch.save(model.state_dict(), model_save_path) # save the model for each seed & epoch
+    #     print("Model saved at", model_save_path)
+    # model.load_state_dict(torch.load(ckpt_path))
     test_rmse, true, pred = test_fn(test_loader, model, device)
     return test_rmse
 
@@ -278,14 +247,15 @@ def main():
     parser.add_argument('--train_omics_input_path', type=str, default='./coderdata_input/beataml_transcriptomics.csv.gz', help='Path to train omics input data')
     parser.add_argument('--train_exp_input_path', type=str, default='./coderdata_input/train_exp.csv.gz', help='Path to train experiment input data')
     parser.add_argument('--train_drugs_input_path', type=str, default='./coderdata_input/train_drugs.tsv.gz', help='Path to train drugs input data')
-    parser.add_argument('--test_omics_input_path', type=str, default='./coderdata_input/MPNST_RNA_seq.csv.gz', help='Path to test omics input data')
-    parser.add_argument('--test_exp_input_path', type=str, default='./coderdata_input/MPNST_experiments.csv.gz', help='Path to test experiment input data')
-    parser.add_argument('--test_drugs_input_path', type=str, default='./coderdata_input/MPNST_drugs.tsv.gz', help='Path to test drugs input data')
+    # parser.add_argument('--test_omics_input_path', type=str, default='./coderdata_input/MPNST_RNA_seq.csv.gz', help='Path to test omics input data')
+    # parser.add_argument('--test_exp_input_path', type=str, default='./coderdata_input/MPNST_experiments.csv.gz', help='Path to test experiment input data')
+    # parser.add_argument('--test_drugs_input_path', type=str, default='./coderdata_input/MPNST_drugs.tsv.gz', help='Path to test drugs input data')
     parser.add_argument('--output_prefix', type=str, default='broad_CCLE', help='describe the study; output file will be named accordingly')
     parser.add_argument('--study_description', type=str, default='CCLE', help='For broad studies, specify the study name: CCLE or PRISM')
     parser.add_argument('--dose_response_metric', type=str, default='fit_auc', help='Choose dose response metric: fit_auc or fit_ic50')
     parser.add_argument('--checkpoint_path', type=str, default='models/model_seed_1_epoch_99.pt', help='Path to the model checkpoint to evaluate')
     parser.add_argument('--train_log_transform', type=bool, default=False, help='Whether to log transform the training data')
+    parser.add_argument('--test_log_transform', type=bool, default=False, help='Whether to log-transform the test data')
 
     args = parser.parse_args()
     # Convert argparse arguments to variables
@@ -296,14 +266,12 @@ def main():
     train_input_path = args.train_omics_input_path
     train_exp_input_path = args.train_exp_input_path
     train_drugs_input_path = args.train_drugs_input_path
-    test_input_path = args.test_omics_input_path
-    test_exp_input_path = args.test_exp_input_path
-    test_drugs_input_path = args.test_drugs_input_path
     output_prefix = args.output_prefix
     study_description = args.study_description
     dose_response_metric = args.dose_response_metric
     ckpt_path = args.checkpoint_path
     train_log_transform = args.train_log_transform
+    test_log_transform = args.test_log_transform
 
     # load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
 
@@ -316,14 +284,17 @@ def main():
                                     train_input_path=train_input_path,
                                     train_exp_input_path=train_exp_input_path,
                                     train_drugs_input_path=train_drugs_input_path,
-                                    test_input_path=test_input_path,
-                                    test_exp_input_path= test_exp_input_path,
-                                    test_drugs_input_path= test_drugs_input_path,
+                                    # test_input_path=test_input_path,
+                                    # test_exp_input_path= test_exp_input_path,
+                                    # test_drugs_input_path= test_drugs_input_path,
                                     load_trained_model=load_trained_model,
                                     study_description=study_description,
                                     dose_response_metric=dose_response_metric,
                                     ckpt_path=ckpt_path,
-                                    train_log_transform=train_log_transform)
+                                    train_log_transform=train_log_transform,
+                                    test_log_transform=test_log_transform,
+                                    output_prefix=output_prefix
+                                    )
         results[seed] = test_rmse
 
     # File path for saving the results

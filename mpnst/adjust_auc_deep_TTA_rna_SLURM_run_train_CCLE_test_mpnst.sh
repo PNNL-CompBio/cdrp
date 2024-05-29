@@ -1,6 +1,6 @@
 #!/bin/csh
 #SBATCH -A br24_moon515                # Replace with your actual project name
-#SBATCH -t 20:00:00                   # Set to your required time limit
+#SBATCH -t 04:00:00                   # Set to your required time limit
 #SBATCH -N 1                          # Number of nodes
 #SBATCH -n 4                          # Number of cores (adjust as needed)
 #SBATCH -J rpkm_beataml_deep_TTA       # Job name
@@ -38,7 +38,7 @@ printenv
 # Execute your command with specified arguments
 python /people/moon515/mpnst_smile_model/adjust_auc_deep_TTA_RNA_mpnst_run.py \
     --data_split_seed 1 \
-    --n_epochs 500 \
+    --n_epochs 300 \
     --train_omics_input_path /people/moon515/mpnst_smile_model/coderdata_0_1_26/broad_sanger_transcriptomics.csv.gz \
     --train_exp_input_path /people/moon515/mpnst_smile_model/coderdata_0_1_26/45458812_broad_sanger_experiments.tsv \
     --train_drugs_input_path /people/moon515/mpnst_smile_model/coderdata_0_1_26/broad_sanger_drugs.tsv \

@@ -5,6 +5,7 @@ import pandas as pd
 from rdkit import Chem
 import os
 import pandas as pd
+import numpy as np
 #------------------
 # 1. download data
 #------------------
@@ -339,6 +340,11 @@ class DataProcessor:
             df_long = pd.read_csv(input_file_path, compression='gzip')
         else:
             df_long = pd.read_csv(input_file_path)
+        
+        # Check if 'Sanger' exists in the 'source' column
+        if 'Sanger' in df_long['source'].values:
+            # Apply log transformation to 'transcriptomics' values where the 'source' is 'Sanger'
+            df_long.loc[df_long['source'] == 'Sanger', 'transcriptomics'] = np.log1p(df_long.loc[df_long['source'] == 'Sanger', 'transcriptomics'])
 
         # Pivot the DataFrame to wide format
         df_wide = df_long.pivot_table(index='improve_sample_id', columns='entrez_id', values='transcriptomics', aggfunc='first')
@@ -570,6 +576,9 @@ def filter_exp_data(train_exp, study_description, dose_response_metric):
     
     # Subset based on the study description
     filtered_train_exp = train_exp[train_exp['study'].str.contains(study_description)]
+    
+    # Remove any NaN in 'dose_response_metric' [update]
+    filtered_train_exp = filtered_train_exp.dropna(subset=['dose_response_metric'])
     
     # Now, filter based on dose response metric
     # This assumes 'metric' is the column where dose_response_metric values are stored

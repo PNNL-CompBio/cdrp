@@ -18,6 +18,7 @@ import pickle, gzip
 from subword_nmt.apply_bpe import BPE
 import codecs
 from rdkit.Chem import AllChem
+from scipy.stats import pearsonr, spearmanr
 # import config
 
 
@@ -475,24 +476,28 @@ def create_data():
 
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, patience=7, verbose=False, delta=0, chkpoint_name = 'gnn_best.pt' ):
-        """
-        Args:
-            patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement. 
-                            Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
-        """
-        self.patience = patience
-        self.verbose = verbose
-        self.counter = 0
-        self.best_score = None
-        self.early_stop = False
-        self.val_loss_min = np.Inf
-        self.delta = delta
-        self.chkpoint_name = chkpoint_name
+    def __init__(self, patience=7, verbose=False, delta=0, chkpoint_name='/people/moon515/mpnst_smile_model/tmp/best.pt'):
+            """
+            Initializes the EarlyStopping object.
+
+            Args:
+                patience (int): How long to wait after last time validation loss improved.
+                                Default: 7
+                verbose (bool): If True, prints a message for each validation loss improvement. 
+                                Default: False
+                delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                                Default: 0
+                chkpoint_name (str): Name of the checkpoint file to save the best model.
+                                     Default: 'gnn_best.pt'
+            """
+            self.patience = patience
+            self.verbose = verbose
+            self.counter = 0
+            self.best_score = None
+            self.early_stop = False
+            self.val_loss_min = np.Inf
+            self.delta = delta
+            self.chkpoint_name = chkpoint_name
 
     def __call__(self, val_loss, model):
 
@@ -520,18 +525,53 @@ class EarlyStopping:
 
         
 def test_fn(loader, model, device):
-    model.eval()
-    with torch.no_grad():
+    model.eval()  # Set the model to evaluation mode
+    with torch.no_grad():  # Disable gradient calculation
         target, predicted = [], []
         for data in loader:
-            data = data.to(device)
-            output = model(data)
+            data = data.to(device)  # Move data to the appropriate device
+            output = model(data)  # Generate predictions
             pred = output
 
-            target += list(data.y.cpu().numpy().ravel() )
-            predicted += list(pred.cpu().numpy().ravel() )
+            target += list(data.y.cpu().numpy().ravel())
+            predicted += list(pred.cpu().numpy().ravel())
 
-    return mean_squared_error(y_true=target, y_pred=predicted), target, predicted
+    # Convert to numpy arrays for easier indexing
+    target = np.array(target)
+    predicted = np.array(predicted)
+
+     # Filter out NaNs
+    valid_indices = ~np.isnan(predicted)
+    target = target[valid_indices]
+    predicted = predicted[valid_indices]
+    print("Target:", target)
+    print("Predicted:", predicted)
+    
+    # Calculate Mean Squared Error
+    mse = mean_squared_error(y_true=target, y_pred=predicted)
+    
+    # Calculate Pearson correlation coefficient
+    if len(target) > 1 and len(predicted) > 1:  # Ensure there are at least two data points
+        pearson_corr, _ = pearsonr(target, predicted)
+        spearman_corr, _ = spearmanr(target, predicted)
+    else:
+        pearson_corr, spearman_corr = None, None  # Handle cases with insufficient data points
+
+    return mse, pearson_corr, spearman_corr, target, predicted
+
+# def test_fn(loader, model, device):
+#     model.eval()
+#     with torch.no_grad():
+#         target, predicted = [], []
+#         for data in loader:
+#             data = data.to(device)
+#             output = model(data)
+#             pred = output
+
+#             target += list(data.y.cpu().numpy().ravel() )
+#             predicted += list(pred.cpu().numpy().ravel() )
+
+#     return mean_squared_error(y_true=target, y_pred=predicted), target, predicted
 
 
 

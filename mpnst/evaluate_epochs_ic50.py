@@ -216,6 +216,9 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
 
     # bealaml: Ensure improve_sample_id is set as the index before scaling
     train_gene_exp = train_gene_exp.set_index('improve_sample_id')
+    # if the training data requires log_transform
+    if train_log_transform == True:
+        train_gene_exp = np.log1p(train_gene_exp)
     # Now perform the scaling operation on the DataFrame without the index column
     scaler = StandardScaler() # mean=0, unit variance
     train_gene_exp_scaled = scaler.fit_transform(train_gene_exp)
