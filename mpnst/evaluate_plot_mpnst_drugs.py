@@ -11,16 +11,119 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import pearsonr, spearmanr
+import seaborn as sns
 
-from sklearn.model_selection import train_test_split
+def calculate_statistics(true_values, predicted_values):
+    # Ensure both are numpy arrays and flatten predicted_values if it's a list of arrays
+    true_values = np.array(true_values)
+    if isinstance(predicted_values[0], np.ndarray):
+        # Flatten the array if predicted_values consists of arrays (multiple outputs per instance)
+        predicted_values = np.concatenate(predicted_values).ravel()
+    else:
+        predicted_values = np.array(predicted_values)
+
+    # Calculate Pearson correlation coefficient
+    if len(true_values) > 1 and len(predicted_values) > 1:  # Ensure there's enough data to calculate
+        pcc, _ = pearsonr(true_values, predicted_values)
+    else:
+        pcc = np.nan  # Not enough data to calculate correlation
+
+    # Calculate Spearman's rank correlation coefficient
+    if len(true_values) > 1 and len(predicted_values) > 1:
+        srcc, _ = spearmanr(true_values, predicted_values)
+    else:
+        srcc = np.nan
+
+    # Calculate sample size
+    sample_size = len(true_values)
+
+    return pcc, srcc, sample_size
+
+
+# load trained model and evaluate and plot the results
+load_trained_model = True
+
+def predict(model, test_loader, device):
+    true_values = []
+    predicted_values = []
+    with torch.no_grad():
+        for data in test_loader:
+            data = data.to(device)
+            outputs = model(data)
+            predicted_values.extend(outputs.cpu().numpy())
+            true_values.extend(data.y.cpu().numpy())
+    return true_values, predicted_values
+
+def plot_results(true_values, predicted_values, ckpt_path, test_df):
+    # Flatten the predicted values list of lists
+    predicted_values = [item[0] for item in predicted_values]
+    # Debugging: Print lengths to identify inconsistencies
+    print(f'Length of true_values: {len(true_values)}')
+    print(f'Length of predicted_values: {len(predicted_values)}')
+    print(f'Length of test_df: {len(test_df)}')
+    # Calculate statistics
+    pcc, srcc, sample_size = calculate_statistics(true_values, predicted_values)
+
+    # Ensure the lengths match
+    if len(true_values) != len(predicted_values):
+        raise ValueError('Mismatch in length between true_values and predicted_values')
+    if len(true_values) != len(test_df):
+        raise ValueError('Mismatch in length between true_values/predicted_values and test_df')
+
+    # Convert improve_sample_id and improve_drug_id to appropriate types if necessary
+    test_df['improve_sample_id'] = test_df['improve_sample_id'].apply(str)
+    test_df['improve_drug_id'] = test_df['improve_drug_id'].apply(str)
+
+    # Create a DataFrame for plotting
+    plot_df = pd.DataFrame({
+        'True dss': true_values,
+        'Predicted dss': predicted_values,
+        'improve_sample_id': test_df['improve_sample_id'],
+        'improve_drug_id': test_df['improve_drug_id']
+    })
+    print(plot_df)
+
+    # Define enough unique filled markers
+    # markers = ['o', 's', 'P', 'X', 'D', '^', 'v', '<', '>', 'p', '*', 'h', 'H', '+', 'x', 'd', '|', '_', '8', '1', '2', '3', '4']
+
+    # Plotting
+    plt.figure(figsize=(14, 10))
+    # sns.scatterplot(data=plot_df, x='True dss', y='Predicted dss', hue='improve_sample_id', style='improve_drug_id', palette='deep', alpha=0.5)
+    sns.scatterplot(
+    data=plot_df, 
+    x='True dss', 
+    y='Predicted dss', 
+    hue='improve_sample_id', 
+    style='improve_drug_id', 
+    palette='deep', 
+    alpha=0.7, 
+    s=100,  # Increase marker size
+    # markers=markers  # Use the extended markers
+    )
+    plt.title(f'Comparison of True and Predicted dss\nCheckpoint: {ckpt_path}\nPCC: {pcc:.3f}, SRCC: {srcc:.3f}, Sample Size: {sample_size}')
+    plt.xlabel('True dss')
+    plt.ylabel('Predicted dss')
+    plt.grid(True)
+    plt.plot([min(true_values), max(true_values)], [min(true_values), max(true_values)], 'r--')
+
+    # Adjust legend
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1), ncol=2)  # Move legend outside the plot with two columns
+
+    plt.tight_layout()
+    plt.show()
     
+    # Save the plot as a PDF
+    ckpt_basename = os.path.basename(ckpt_path)
+    plt.savefig(f'plots/zzz_rna_{ckpt_basename}_true_vs_predicted.pdf')
+
 def split_df(df, seed):
     train, val = train_test_split(df, random_state=seed, test_size=0.2, train_size=0.8)
     train.reset_index(drop=True, inplace=True)
     val.reset_index(drop=True, inplace=True)
     return train, val
 
-load_trained_model = False
+# load_trained_model = False
 selected_gene_df = pd.read_csv("./shared_input/graphDRP_landmark_genes_map.txt", sep='\t')
 def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
     # Extract the gene names from the second column of selected_gene_df
@@ -42,17 +145,6 @@ def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
     train_gene_exp_filtered = train_gene_exp[common_columns]
     return test_gene_exp_filtered, train_gene_exp_filtered
 
-def predict(model, test_loader, device):
-    true_values = []
-    predicted_values = []
-    with torch.no_grad():
-        for data in test_loader:
-            data = data.to(device)
-            outputs = model(data)
-            predicted_values.extend(outputs.cpu().numpy())
-            true_values.extend(data.y.cpu().numpy())
-    return true_values, predicted_values
-
 ##############################
 # DATA PROCESSING
 ##############################
@@ -64,9 +156,10 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
                     train_drugs_input_path,
                     test_input_path,
                     test_exp_input_path,
-                    test_drugs_input_path, load_trained_model,
+                    test_drugs_input_path,
                     train_study_description, test_study_description, dose_response_metric,
-                    ckpt_path, output_prefix, train_log_transform, test_log_transform
+                    ckpt_path, output_prefix, train_log_transform, test_log_transform,
+                    load_trained_model=True, filter_drugs=None
                     ):
     
     # Convert to absolute paths
@@ -96,6 +189,11 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
 
     # test: process experiment & drug data
     test_exp = pd.read_csv(test_exp_input_path, compression='gzip') if test_exp_input_path.endswith('.gz') else pd.read_csv(test_exp_input_path, sep='\t')
+    
+    # filter drugs if specified
+    # if filter_drugs != None:
+    #     test_exp = test_exp[test_exp['improve_drug_id'] == filter_drugs]
+
     test_drugs = pd.read_csv(test_drugs_input_path, sep='\t', compression='gzip') if test_drugs_input_path.endswith('.gz') else pd.read_csv(test_drugs_input_path, sep='\t')
     # filter by dose_response_metric
     test_exp = test_exp[test_exp['dose_response_metric'] == dose_response_metric]
@@ -159,8 +257,9 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     if test_log_transform == True:
         test_gene_exp = np.log1p(test_gene_exp)
     # Now perform the scaling operation on the DataFrame without the index column
-    scaler = StandardScaler() # mean=0, unit variance
-    test_gene_exp_scaled = scaler.fit_transform(test_gene_exp)
+    # scaler = StandardScaler() # mean=0, unit variance
+    # test_gene_exp_scaled = scaler.fit_transform(test_gene_exp)
+    test_gene_exp_scaled = test_gene_exp
     # When creating the new DataFrame, use the same columns as the gene_exp DataFrame
     # Because gene_exp now does not include 'improve_sample_id' column, we don't need to adjust column names
     test_gene_exp_scaled = pd.DataFrame(test_gene_exp_scaled, index=test_gene_exp.index, columns=test_gene_exp.columns)
@@ -186,7 +285,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     # bs = 64
     train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
     val_loader = DataLoader(val_ds, batch_size=bs, shuffle=False, drop_last=False)
-    test_loader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False)
+    # test_loader = DataLoader(test_ds, batch_size=bs, shuffle=False, drop_last=False)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = Model(gnn_features = None, encoder_type='transformer',n_genes=len(test_gene_exp.columns)).to(device)
@@ -196,6 +295,15 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
 
     early_stopping = EarlyStopping(patience = n_epochs, verbose=True, chkpoint_name = ckpt_path)
     criterion = nn.MSELoss()
+
+    # if we have a trained model, skip training and evaluate:
+    model.load_state_dict(torch.load(ckpt_path))
+    test_loader = DataLoader(test_ds, batch_size=999999, shuffle=False, drop_last=False) # use all for evaluation
+    true_values, predicted_values = predict(model, test_loader, device)
+    # print(true_values)  # Check the type of the first element if not empty
+    # print(predicted_values)  # Same as above
+    plot_results(true_values, predicted_values, ckpt_path, test_df)
+    exit()
 
     # train the model    
     # Create a dictionary to store losses for training and validation
@@ -282,6 +390,7 @@ def main():
     parser.add_argument('--checkpoint_path', type=str, default='/people/moon515/mpnst_smile_model/tmp/best.pt', help='Path to the model checkpoint to evaluate')
     parser.add_argument('--train_log_transform', type=bool, default=False, help='Whether to log-transform the training data')
     parser.add_argument('--test_log_transform', type=bool, default=False, help='Whether to log-transform the test data')
+    parser.add_argument('--filter_drugs', type=str, default=False, help='State a drug name to filter the data')
 
     args = parser.parse_args()
     # Convert argparse arguments to variables
@@ -302,9 +411,9 @@ def main():
     ckpt_path = args.checkpoint_path
     train_log_transform = args.train_log_transform
     test_log_transform = args.test_log_transform
+    filter_drugs = args.filter_drugs
 
-
-    load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
+    # load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
 
     # Call run_experiment or any other logic meant to run when the script is executed directly
     results = {}
@@ -325,7 +434,8 @@ def main():
                                     dose_response_metric=dose_response_metric,
                                     ckpt_path=ckpt_path,
                                     train_log_transform=train_log_transform,
-                                    test_log_transform=test_log_transform)
+                                    test_log_transform=test_log_transform,
+                                    filter_drugs=filter_drugs)
         results[seed] = test_rmse, pearson_corr, spearman_corr 
 
         # File path for saving the results

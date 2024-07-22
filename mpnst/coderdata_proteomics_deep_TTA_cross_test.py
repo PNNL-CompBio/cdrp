@@ -1,4 +1,4 @@
-from data_utils import DataProcessor, add_smiles, average_dose_response_value, filter_exp_data
+from data_utils_proteomics import DataProcessor, add_smiles, average_dose_response_value, filter_exp_data
 from gnn_utils import CreateData, EarlyStopping, test_fn
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -26,7 +26,7 @@ def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
     # Extract the gene names from the second column of selected_gene_df
     selected_genes = selected_gene_df.iloc[:, 1].tolist()
     # Convert gene IDs to string because DataFrame columns are strings
-    selected_genes_str = [str(float(gene)) for gene in selected_genes]
+    selected_genes_str = [str(gene) for gene in selected_genes]
     # Convert test_gene_exp columns to strings and ensure they end with .0 except for column named "improve_sample_id"
     # test_gene_exp.columns = [str(col) if col == "improve_sample_id" else str(col) if '.' in str(col) else str(col) + '.0' for col in test_gene_exp.columns]
     test_gene_exp.columns = [str(col) for col in test_gene_exp.columns]
@@ -41,6 +41,19 @@ def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
     test_gene_exp_filtered = test_gene_exp[common_columns]
     train_gene_exp_filtered = train_gene_exp[common_columns]
     return test_gene_exp_filtered, train_gene_exp_filtered
+
+# fix for mpnst data where the column names dont have decimals
+def mpnst_intersect_columns(train_gene_exp, selected_gene_df):
+    # Extract the gene names from the second column of selected_gene_df
+    selected_genes = selected_gene_df.iloc[:, 1].tolist()
+    # Convert gene IDs to string and remove the decimal point to match the column names format
+    selected_genes_str = [str(int(float(gene))) for gene in selected_genes]
+    # Find common genes between selected_genes and the columns of the input DataFrame
+    common_columns = list(set(selected_genes_str).intersection(set(train_gene_exp.columns)))
+    # Ensure "improve_sample_id" is included if it exists in the DataFrame
+    if "improve_sample_id" in train_gene_exp.columns:
+        common_columns = ["improve_sample_id"] + common_columns
+    return common_columns
 
 def predict(model, test_loader, device):
     true_values = []
@@ -84,15 +97,28 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     if not os.path.exists(os.path.join("./shared_input", train_input_filename+"_wide.tsv")):
         DataProcessor.convert_long_to_wide_format(train_input_path)
     train_gene_exp = pd.read_csv(os.path.join("./shared_input", train_input_filename+"_wide.tsv"), sep='\t')
-
-    if train_study_description == 'MPNST':
-        new_columns = ['improve_sample_id'] + [str(col) + '.0' for col in train_gene_exp.columns[1:]]
+    
+    # detect whether mpnst datasets are being used
+    if train_study_description == "MPNST" or train_study_description == "BeatAML":
+        new_columns = ['improve_sample_id'] + [str(col).replace('.0', '') for col in train_gene_exp.columns[1:]]
         train_gene_exp.columns = new_columns
-
-    if test_study_description == 'MPNST':
-        new_columns = ['improve_sample_id'] + [str(col) + '.0' for col in test_gene_exp.columns[1:]]
+    
+    # convert feature names 1.0 to 1
+    if test_study_description == "BeatAML":
+        new_columns = ['improve_sample_id'] + [str(col).replace('.0', '') for col in test_gene_exp.columns[1:]]
         test_gene_exp.columns = new_columns
+    # else:
+    #     test_gene_exp = intersect_columns(test_gene_exp, selected_gene_df)
     test_gene_exp, train_gene_exp = intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df)
+
+    # if train_study_description == 'MPNST':
+    #     new_columns = ['improve_sample_id'] + [str(col) + '.0' for col in train_gene_exp.columns[1:]]
+    #     train_gene_exp.columns = new_columns
+
+    # if test_study_description == 'MPNST':
+    #     new_columns = ['improve_sample_id'] + [str(col) + '.0' for col in test_gene_exp.columns[1:]]
+    #     test_gene_exp.columns = new_columns
+    # test_gene_exp, train_gene_exp = intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df)
 
     # test: process experiment & drug data
     test_exp = pd.read_csv(test_exp_input_path, compression='gzip') if test_exp_input_path.endswith('.gz') else pd.read_csv(test_exp_input_path, sep='\t')
@@ -156,28 +182,34 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     # test: Ensure improve_sample_id is set as the index before scaling
     test_gene_exp = test_gene_exp.set_index('improve_sample_id')
     # if the training data requires log_transform
-    if test_log_transform == True:
-        test_gene_exp = np.log1p(test_gene_exp)
+    # if test_log_transform == True:
+    #     test_gene_exp = np.log1p(test_gene_exp)
     # Now perform the scaling operation on the DataFrame without the index column
     scaler = StandardScaler() # mean=0, unit variance
     test_gene_exp_scaled = scaler.fit_transform(test_gene_exp)
+    # test_gene_exp_scaled = test_gene_exp  #skip for proteomics
     # When creating the new DataFrame, use the same columns as the gene_exp DataFrame
     # Because gene_exp now does not include 'improve_sample_id' column, we don't need to adjust column names
     test_gene_exp_scaled = pd.DataFrame(test_gene_exp_scaled, index=test_gene_exp.index, columns=test_gene_exp.columns)
+    # Remove columns with NaN values
+    test_gene_exp_scaled = test_gene_exp_scaled.dropna(axis=1)  # axis=1 drops columns which contain any NaN values
     data_creater = CreateData(gexp=test_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/") 
     test_ds = data_creater.create_data(test_df)
 
     # Ensure improve_sample_id is set as the index before scaling
     train_gene_exp = train_gene_exp.set_index('improve_sample_id')
     # if the training data requires log_transform
-    if train_log_transform == True:
-        train_gene_exp = np.log1p(train_gene_exp)
+    # if train_log_transform == True:
+    #     train_gene_exp = np.log1p(train_gene_exp)
     # Now perform the scaling operation on the DataFrame without the index column
     scaler = StandardScaler() # mean=0, unit variance
     train_gene_exp_scaled = scaler.fit_transform(train_gene_exp)
+    # train_gene_exp_scaled = train_gene_exp # skip for proteomics
     # When creating the new DataFrame, use the same columns as the gene_exp DataFrame
     # Because gene_exp now does not include 'improve_sample_id' column, we don't need to adjust column names
     train_gene_exp_scaled = pd.DataFrame(train_gene_exp_scaled, index=train_gene_exp.index, columns=train_gene_exp.columns) 
+    # Remove columns with NaN values
+    train_gene_exp_scaled = train_gene_exp_scaled.dropna(axis=1)  # axis=1 drops columns which contain any NaN values
     data_creater = CreateData(gexp=train_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/") 
     # define the train and val datasets
     train_ds = data_creater.create_data(train)

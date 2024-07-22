@@ -203,9 +203,10 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
         hist["val_rmse"].append(val_rmse)
         # print(f'Epoch: {epoch}, Train_rmse: {train_rmse:.3}, Val_rmse: {val_rmse:.3}')
         print(f'Epoch: {epoch}, Val_rmse: {val_rmse:.3}')
-        model_save_path = f'models/{output_prefix}_model_seed_{data_split_seed}_epoch_{epoch}.pt'
-        torch.save(model.state_dict(), model_save_path) # save the model for each seed & epoch
-        print("Model saved at", model_save_path)
+        if epoch % 33 == 0:
+            model_save_path = f'models/{output_prefix}_model_seed_{data_split_seed}_epoch_{epoch}.pt'
+            torch.save(model.state_dict(), model_save_path) # save the model for each seed & epoch
+            print("Model saved at", model_save_path)
     model.load_state_dict(torch.load('./tmp/best.pt'))
     # test_rmse, true, pred
     test_rmse, pearson_corr, spearman_corr, _, _= test_fn(test_loader, model, device)

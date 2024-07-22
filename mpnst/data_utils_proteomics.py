@@ -343,11 +343,11 @@ class DataProcessor:
         
         # Check if 'Sanger' exists in the 'source' column
         if 'Sanger' in df_long['source'].values:
-            # Apply log transformation to 'transcriptomics' values where the 'source' is 'Sanger'
-            df_long.loc[df_long['source'] == 'Sanger', 'transcriptomics'] = np.log1p(df_long.loc[df_long['source'] == 'Sanger', 'transcriptomics'])
+            # Apply log transformation to 'proteomics' values where the 'source' is 'Sanger'
+            df_long.loc[df_long['source'] == 'Sanger', 'proteomics'] = np.log1p(df_long.loc[df_long['source'] == 'Sanger', 'proteomics'])
 
         # Pivot the DataFrame to wide format
-        df_wide = df_long.pivot_table(index='improve_sample_id', columns='entrez_id', values='transcriptomics', aggfunc='first')
+        df_wide = df_long.pivot_table(index='improve_sample_id', columns='entrez_id', values='proteomics', aggfunc='first')
 
         # Reset the index to make `improve_sample_id` a column again, and fill NaN values with 0
         df_wide.reset_index(inplace=True)
