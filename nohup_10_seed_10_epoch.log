@@ -1,263 +1,0 @@
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]/Users/moon515/Documents/mpnst_smile_model/gnn_utils.py:253: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/utils/tensor_new.cpp:278.)
-  data = Data(tokens=torch.tensor([tokens], dtype=torch.long),
-100%|██████████| 203/203 [00:00<00:00, 2887.34it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 257/3613 [00:00<00:01, 2567.51it/s] 18%|█▊        | 640/3613 [00:00<00:00, 3306.20it/s] 28%|██▊       | 1017/3613 [00:00<00:00, 3515.53it/s] 39%|███▉      | 1419/3613 [00:00<00:00, 3711.85it/s] 50%|█████     | 1821/3613 [00:00<00:00, 3821.52it/s] 61%|██████▏   | 2217/3613 [00:00<00:00, 3865.97it/s] 73%|███████▎  | 2621/3613 [00:00<00:00, 3921.06it/s] 83%|████████▎ | 3014/3613 [00:00<00:00, 3895.87it/s] 94%|█████████▍| 3413/3613 [00:00<00:00, 3923.85it/s]100%|██████████| 3613/3613 [00:00<00:00, 3791.18it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 45%|████▌     | 408/904 [00:00<00:00, 4078.08it/s] 90%|█████████ | 816/904 [00:00<00:00, 4026.22it/s]100%|██████████| 904/904 [00:00<00:00, 4014.19it/s]
-Validation loss decreased (inf --> 0.063508).  Saving model ...
-Epoch: 0, Val_rmse: 0.0635
-EarlyStopping counter: 1 out of 10
-Epoch: 1, Val_rmse: 0.0637
-Validation loss decreased (0.063508 --> 0.063202).  Saving model ...
-Epoch: 2, Val_rmse: 0.0632
-EarlyStopping counter: 1 out of 10
-Epoch: 3, Val_rmse: 0.0647
-EarlyStopping counter: 2 out of 10
-Epoch: 4, Val_rmse: 0.0636
-Validation loss decreased (0.063202 --> 0.063164).  Saving model ...
-Epoch: 5, Val_rmse: 0.0632
-Validation loss decreased (0.063164 --> 0.056342).  Saving model ...
-Epoch: 6, Val_rmse: 0.0563
-Validation loss decreased (0.056342 --> 0.051886).  Saving model ...
-Epoch: 7, Val_rmse: 0.0519
-Validation loss decreased (0.051886 --> 0.051464).  Saving model ...
-Epoch: 8, Val_rmse: 0.0515
-Validation loss decreased (0.051464 --> 0.048468).  Saving model ...
-Epoch: 9, Val_rmse: 0.0485
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3339.77it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 256/3613 [00:00<00:01, 2555.07it/s] 18%|█▊        | 651/3613 [00:00<00:00, 3371.00it/s] 29%|██▊       | 1037/3613 [00:00<00:00, 3592.56it/s] 40%|███▉      | 1434/3613 [00:00<00:00, 3739.12it/s] 51%|█████     | 1834/3613 [00:00<00:00, 3831.72it/s] 62%|██████▏   | 2252/3613 [00:00<00:00, 3948.34it/s] 73%|███████▎  | 2653/3613 [00:00<00:00, 3967.41it/s] 85%|████████▍ | 3054/3613 [00:00<00:00, 3979.88it/s] 96%|█████████▌| 3452/3613 [00:00<00:00, 3963.45it/s]100%|██████████| 3613/3613 [00:00<00:00, 3832.94it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 43%|████▎     | 390/904 [00:00<00:00, 3894.90it/s] 86%|████████▋ | 780/904 [00:00<00:00, 2422.15it/s]100%|██████████| 904/904 [00:00<00:00, 2626.58it/s]
-Validation loss decreased (inf --> 0.070936).  Saving model ...
-Epoch: 0, Val_rmse: 0.0709
-Validation loss decreased (0.070936 --> 0.069764).  Saving model ...
-Epoch: 1, Val_rmse: 0.0698
-Validation loss decreased (0.069764 --> 0.069715).  Saving model ...
-Epoch: 2, Val_rmse: 0.0697
-EarlyStopping counter: 1 out of 10
-Epoch: 3, Val_rmse: 0.0703
-Validation loss decreased (0.069715 --> 0.069061).  Saving model ...
-Epoch: 4, Val_rmse: 0.0691
-EarlyStopping counter: 1 out of 10
-Epoch: 5, Val_rmse: 0.0706
-Validation loss decreased (0.069061 --> 0.057428).  Saving model ...
-Epoch: 6, Val_rmse: 0.0574
-EarlyStopping counter: 1 out of 10
-Epoch: 7, Val_rmse: 0.0608
-Validation loss decreased (0.057428 --> 0.056083).  Saving model ...
-Epoch: 8, Val_rmse: 0.0561
-EarlyStopping counter: 1 out of 10
-Epoch: 9, Val_rmse: 0.0561
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3217.52it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 238/3613 [00:00<00:01, 2376.70it/s] 16%|█▌        | 585/3613 [00:00<00:01, 3017.72it/s] 27%|██▋       | 986/3613 [00:00<00:00, 3469.09it/s] 38%|███▊      | 1385/3613 [00:00<00:00, 3668.11it/s] 49%|████▉     | 1783/3613 [00:00<00:00, 3777.16it/s] 61%|██████    | 2193/3613 [00:00<00:00, 3884.22it/s] 72%|███████▏  | 2603/3613 [00:00<00:00, 3953.62it/s] 83%|████████▎ | 3013/3613 [00:00<00:00, 3999.21it/s] 95%|█████████▍| 3416/3613 [00:00<00:00, 4004.80it/s]100%|██████████| 3613/3613 [00:00<00:00, 3800.74it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 45%|████▌     | 411/904 [00:00<00:00, 4108.23it/s] 91%|█████████ | 822/904 [00:00<00:00, 4047.43it/s]100%|██████████| 904/904 [00:00<00:00, 2831.89it/s]
-Validation loss decreased (inf --> 0.051168).  Saving model ...
-Epoch: 0, Val_rmse: 0.0512
-Validation loss decreased (0.051168 --> 0.050337).  Saving model ...
-Epoch: 1, Val_rmse: 0.0503
-Validation loss decreased (0.050337 --> 0.049815).  Saving model ...
-Epoch: 2, Val_rmse: 0.0498
-Validation loss decreased (0.049815 --> 0.047248).  Saving model ...
-Epoch: 3, Val_rmse: 0.0472
-EarlyStopping counter: 1 out of 10
-Epoch: 4, Val_rmse: 0.0496
-Validation loss decreased (0.047248 --> 0.039257).  Saving model ...
-Epoch: 5, Val_rmse: 0.0393
-Validation loss decreased (0.039257 --> 0.038088).  Saving model ...
-Epoch: 6, Val_rmse: 0.0381
-Validation loss decreased (0.038088 --> 0.036774).  Saving model ...
-Epoch: 7, Val_rmse: 0.0368
-EarlyStopping counter: 1 out of 10
-Epoch: 8, Val_rmse: 0.0375
-EarlyStopping counter: 2 out of 10
-Epoch: 9, Val_rmse: 0.037
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3263.71it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  8%|▊         | 281/3613 [00:00<00:01, 2808.93it/s] 19%|█▉        | 692/3613 [00:00<00:00, 3570.24it/s] 31%|███       | 1115/3613 [00:00<00:00, 3870.06it/s] 43%|████▎     | 1544/3613 [00:00<00:00, 4033.47it/s] 54%|█████▍    | 1969/3613 [00:00<00:00, 4108.35it/s] 67%|██████▋   | 2409/3613 [00:00<00:00, 4206.26it/s] 79%|███████▉  | 2850/3613 [00:00<00:00, 4272.53it/s] 91%|█████████ | 3278/3613 [00:00<00:00, 4274.22it/s]100%|██████████| 3613/3613 [00:00<00:00, 3709.92it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 40%|████      | 365/904 [00:00<00:00, 3644.72it/s] 84%|████████▎ | 755/904 [00:00<00:00, 3793.30it/s]100%|██████████| 904/904 [00:00<00:00, 3766.73it/s]
-Validation loss decreased (inf --> 0.051119).  Saving model ...
-Epoch: 0, Val_rmse: 0.0511
-EarlyStopping counter: 1 out of 10
-Epoch: 1, Val_rmse: 0.0521
-Validation loss decreased (0.051119 --> 0.050200).  Saving model ...
-Epoch: 2, Val_rmse: 0.0502
-EarlyStopping counter: 1 out of 10
-Epoch: 3, Val_rmse: 0.0516
-EarlyStopping counter: 2 out of 10
-Epoch: 4, Val_rmse: 0.0506
-EarlyStopping counter: 3 out of 10
-Epoch: 5, Val_rmse: 0.0504
-EarlyStopping counter: 4 out of 10
-Epoch: 6, Val_rmse: 0.0507
-Validation loss decreased (0.050200 --> 0.049984).  Saving model ...
-Epoch: 7, Val_rmse: 0.05
-Validation loss decreased (0.049984 --> 0.045234).  Saving model ...
-Epoch: 8, Val_rmse: 0.0452
-Validation loss decreased (0.045234 --> 0.040402).  Saving model ...
-Epoch: 9, Val_rmse: 0.0404
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3051.71it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  6%|▌         | 219/3613 [00:00<00:01, 2189.34it/s] 15%|█▍        | 541/3613 [00:00<00:01, 2792.05it/s] 26%|██▌       | 926/3613 [00:00<00:00, 3274.71it/s] 37%|███▋      | 1340/3613 [00:00<00:00, 3614.85it/s] 48%|████▊     | 1745/3613 [00:00<00:00, 3769.57it/s] 60%|█████▉    | 2153/3613 [00:00<00:00, 3873.85it/s] 71%|███████   | 2551/3613 [00:00<00:00, 3907.38it/s] 82%|████████▏ | 2959/3613 [00:00<00:00, 3959.61it/s] 93%|█████████▎| 3355/3613 [00:01<00:00, 2885.34it/s]100%|██████████| 3613/3613 [00:01<00:00, 3319.57it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 45%|████▌     | 408/904 [00:00<00:00, 4071.25it/s] 90%|█████████ | 816/904 [00:00<00:00, 3628.02it/s]100%|██████████| 904/904 [00:00<00:00, 3672.01it/s]
-Validation loss decreased (inf --> 0.063310).  Saving model ...
-Epoch: 0, Val_rmse: 0.0633
-Validation loss decreased (0.063310 --> 0.062798).  Saving model ...
-Epoch: 1, Val_rmse: 0.0628
-EarlyStopping counter: 1 out of 10
-Epoch: 2, Val_rmse: 0.063
-EarlyStopping counter: 2 out of 10
-Epoch: 3, Val_rmse: 0.0653
-Validation loss decreased (0.062798 --> 0.058095).  Saving model ...
-Epoch: 4, Val_rmse: 0.0581
-Validation loss decreased (0.058095 --> 0.050863).  Saving model ...
-Epoch: 5, Val_rmse: 0.0509
-Validation loss decreased (0.050863 --> 0.050834).  Saving model ...
-Epoch: 6, Val_rmse: 0.0508
-Validation loss decreased (0.050834 --> 0.046357).  Saving model ...
-Epoch: 7, Val_rmse: 0.0464
-Validation loss decreased (0.046357 --> 0.045328).  Saving model ...
-Epoch: 8, Val_rmse: 0.0453
-Validation loss decreased (0.045328 --> 0.045198).  Saving model ...
-Epoch: 9, Val_rmse: 0.0452
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3201.99it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  8%|▊         | 282/3613 [00:00<00:01, 2818.63it/s] 19%|█▉        | 682/3613 [00:00<00:00, 3512.46it/s] 30%|██▉       | 1079/3613 [00:00<00:00, 3719.62it/s] 41%|████▏     | 1498/3613 [00:00<00:00, 3903.44it/s] 52%|█████▏    | 1889/3613 [00:00<00:00, 2952.52it/s] 63%|██████▎   | 2277/3613 [00:00<00:00, 3212.02it/s] 75%|███████▍  | 2696/3613 [00:00<00:00, 3491.19it/s] 86%|████████▌ | 3113/3613 [00:00<00:00, 3686.66it/s] 98%|█████████▊| 3535/3613 [00:00<00:00, 3842.01it/s]100%|██████████| 3613/3613 [00:01<00:00, 3579.27it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 46%|████▋     | 419/904 [00:00<00:00, 4184.32it/s] 93%|█████████▎| 840/904 [00:00<00:00, 4196.98it/s]100%|██████████| 904/904 [00:00<00:00, 4188.35it/s]
-Validation loss decreased (inf --> 0.061244).  Saving model ...
-Epoch: 0, Val_rmse: 0.0612
-Validation loss decreased (0.061244 --> 0.059589).  Saving model ...
-Epoch: 1, Val_rmse: 0.0596
-Validation loss decreased (0.059589 --> 0.058536).  Saving model ...
-Epoch: 2, Val_rmse: 0.0585
-Validation loss decreased (0.058536 --> 0.058325).  Saving model ...
-Epoch: 3, Val_rmse: 0.0583
-EarlyStopping counter: 1 out of 10
-Epoch: 4, Val_rmse: 0.0591
-Validation loss decreased (0.058325 --> 0.058239).  Saving model ...
-Epoch: 5, Val_rmse: 0.0582
-EarlyStopping counter: 1 out of 10
-Epoch: 6, Val_rmse: 0.0586
-EarlyStopping counter: 2 out of 10
-Epoch: 7, Val_rmse: 0.0586
-Validation loss decreased (0.058239 --> 0.047919).  Saving model ...
-Epoch: 8, Val_rmse: 0.0479
-EarlyStopping counter: 1 out of 10
-Epoch: 9, Val_rmse: 0.0493
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3026.52it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  8%|▊         | 272/3613 [00:00<00:01, 2710.57it/s] 18%|█▊        | 665/3613 [00:00<00:00, 3424.38it/s] 30%|██▉       | 1076/3613 [00:00<00:00, 3734.26it/s] 40%|████      | 1450/3613 [00:00<00:00, 2839.19it/s] 50%|█████     | 1808/3613 [00:00<00:00, 3057.95it/s] 60%|█████▉    | 2158/3613 [00:00<00:00, 3188.33it/s] 70%|██████▉   | 2514/3613 [00:00<00:00, 3298.78it/s] 79%|███████▉  | 2870/3613 [00:00<00:00, 3376.37it/s] 89%|████████▉ | 3216/3613 [00:00<00:00, 3301.12it/s] 99%|█████████▊| 3564/3613 [00:01<00:00, 3349.70it/s]100%|██████████| 3613/3613 [00:01<00:00, 3267.73it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 39%|███▉      | 352/904 [00:00<00:00, 3513.61it/s] 78%|███████▊  | 706/904 [00:00<00:00, 3527.36it/s]100%|██████████| 904/904 [00:00<00:00, 3605.06it/s]
-Validation loss decreased (inf --> 0.049573).  Saving model ...
-Epoch: 0, Val_rmse: 0.0496
-EarlyStopping counter: 1 out of 10
-Epoch: 1, Val_rmse: 0.0503
-Validation loss decreased (0.049573 --> 0.049040).  Saving model ...
-Epoch: 2, Val_rmse: 0.049
-EarlyStopping counter: 1 out of 10
-Epoch: 3, Val_rmse: 0.0493
-Validation loss decreased (0.049040 --> 0.048839).  Saving model ...
-Epoch: 4, Val_rmse: 0.0488
-EarlyStopping counter: 1 out of 10
-Epoch: 5, Val_rmse: 0.0491
-EarlyStopping counter: 2 out of 10
-Epoch: 6, Val_rmse: 0.0493
-Validation loss decreased (0.048839 --> 0.048805).  Saving model ...
-Epoch: 7, Val_rmse: 0.0488
-EarlyStopping counter: 1 out of 10
-Epoch: 8, Val_rmse: 0.0497
-Validation loss decreased (0.048805 --> 0.043892).  Saving model ...
-Epoch: 9, Val_rmse: 0.0439
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3312.66it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 246/3613 [00:00<00:01, 2454.75it/s] 16%|█▋        | 591/3613 [00:00<00:00, 3035.82it/s] 27%|██▋       | 974/3613 [00:00<00:00, 3394.60it/s] 38%|███▊      | 1371/3613 [00:00<00:00, 3618.21it/s] 49%|████▊     | 1756/3613 [00:00<00:00, 3696.46it/s] 60%|█████▉    | 2151/3613 [00:00<00:00, 3780.62it/s] 70%|███████   | 2543/3613 [00:00<00:00, 3824.40it/s] 81%|████████▏ | 2936/3613 [00:00<00:00, 3857.89it/s] 92%|█████████▏| 3322/3613 [00:00<00:00, 3784.77it/s]100%|██████████| 3613/3613 [00:00<00:00, 3663.34it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 43%|████▎     | 393/904 [00:00<00:00, 3927.69it/s] 87%|████████▋ | 788/904 [00:00<00:00, 3938.01it/s]100%|██████████| 904/904 [00:00<00:00, 3945.24it/s]
-Validation loss decreased (inf --> 0.052111).  Saving model ...
-Epoch: 0, Val_rmse: 0.0521
-Validation loss decreased (0.052111 --> 0.049223).  Saving model ...
-Epoch: 1, Val_rmse: 0.0492
-EarlyStopping counter: 1 out of 10
-Epoch: 2, Val_rmse: 0.0495
-Validation loss decreased (0.049223 --> 0.049016).  Saving model ...
-Epoch: 3, Val_rmse: 0.049
-Validation loss decreased (0.049016 --> 0.048787).  Saving model ...
-Epoch: 4, Val_rmse: 0.0488
-EarlyStopping counter: 1 out of 10
-Epoch: 5, Val_rmse: 0.0492
-EarlyStopping counter: 2 out of 10
-Epoch: 6, Val_rmse: 0.049
-Validation loss decreased (0.048787 --> 0.044540).  Saving model ...
-Epoch: 7, Val_rmse: 0.0445
-Validation loss decreased (0.044540 --> 0.038351).  Saving model ...
-Epoch: 8, Val_rmse: 0.0384
-Validation loss decreased (0.038351 --> 0.036397).  Saving model ...
-Epoch: 9, Val_rmse: 0.0364
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3375.13it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 248/3613 [00:00<00:01, 2469.50it/s] 17%|█▋        | 617/3613 [00:00<00:00, 3183.94it/s] 27%|██▋       | 986/3613 [00:00<00:00, 3411.29it/s] 38%|███▊      | 1365/3613 [00:00<00:00, 3558.14it/s] 48%|████▊     | 1749/3613 [00:00<00:00, 3657.81it/s] 59%|█████▉    | 2129/3613 [00:00<00:00, 3703.30it/s] 70%|██████▉   | 2526/3613 [00:00<00:00, 3787.64it/s] 81%|████████  | 2918/3613 [00:00<00:00, 3828.33it/s] 91%|█████████▏| 3301/3613 [00:00<00:00, 3514.01it/s]100%|██████████| 3613/3613 [00:01<00:00, 3563.93it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 44%|████▎     | 394/904 [00:00<00:00, 3932.06it/s] 87%|████████▋ | 788/904 [00:00<00:00, 3884.27it/s]100%|██████████| 904/904 [00:00<00:00, 3904.51it/s]
-Validation loss decreased (inf --> 0.046340).  Saving model ...
-Epoch: 0, Val_rmse: 0.0463
-Validation loss decreased (0.046340 --> 0.044798).  Saving model ...
-Epoch: 1, Val_rmse: 0.0448
-Validation loss decreased (0.044798 --> 0.043664).  Saving model ...
-Epoch: 2, Val_rmse: 0.0437
-Validation loss decreased (0.043664 --> 0.041929).  Saving model ...
-Epoch: 3, Val_rmse: 0.0419
-Validation loss decreased (0.041929 --> 0.036087).  Saving model ...
-Epoch: 4, Val_rmse: 0.0361
-EarlyStopping counter: 1 out of 10
-Epoch: 5, Val_rmse: 0.0391
-Validation loss decreased (0.036087 --> 0.033254).  Saving model ...
-Epoch: 6, Val_rmse: 0.0333
-EarlyStopping counter: 1 out of 10
-Epoch: 7, Val_rmse: 0.0343
-Validation loss decreased (0.033254 --> 0.032112).  Saving model ...
-Epoch: 8, Val_rmse: 0.0321
-EarlyStopping counter: 1 out of 10
-Epoch: 9, Val_rmse: 0.0348
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]100%|██████████| 203/203 [00:00<00:00, 3186.16it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 245/3613 [00:00<00:01, 2445.47it/s] 17%|█▋        | 615/3613 [00:00<00:00, 3180.33it/s] 28%|██▊       | 1002/3613 [00:00<00:00, 3491.31it/s] 38%|███▊      | 1386/3613 [00:00<00:00, 3627.61it/s] 48%|████▊     | 1749/3613 [00:00<00:00, 3583.53it/s] 58%|█████▊    | 2108/3613 [00:00<00:00, 3511.01it/s] 69%|██████▊   | 2477/3613 [00:00<00:00, 3567.87it/s] 79%|███████▉  | 2852/3613 [00:00<00:00, 3624.81it/s] 90%|████████▉ | 3238/3613 [00:00<00:00, 3697.23it/s]100%|██████████| 3613/3613 [00:01<00:00, 3588.96it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 40%|███▉      | 361/904 [00:00<00:00, 3605.89it/s] 83%|████████▎ | 753/904 [00:00<00:00, 3787.14it/s]100%|██████████| 904/904 [00:00<00:00, 2716.93it/s]
-Validation loss decreased (inf --> 0.056797).  Saving model ...
-Epoch: 0, Val_rmse: 0.0568
-EarlyStopping counter: 1 out of 10
-Epoch: 1, Val_rmse: 0.0571
-Validation loss decreased (0.056797 --> 0.055517).  Saving model ...
-Epoch: 2, Val_rmse: 0.0555
-Validation loss decreased (0.055517 --> 0.055319).  Saving model ...
-Epoch: 3, Val_rmse: 0.0553
-Validation loss decreased (0.055319 --> 0.055256).  Saving model ...
-Epoch: 4, Val_rmse: 0.0553
-EarlyStopping counter: 1 out of 10
-Epoch: 5, Val_rmse: 0.0563
-EarlyStopping counter: 2 out of 10
-Epoch: 6, Val_rmse: 0.056
-Validation loss decreased (0.055256 --> 0.046552).  Saving model ...
-Epoch: 7, Val_rmse: 0.0466
-EarlyStopping counter: 1 out of 10
-Epoch: 8, Val_rmse: 0.0466
-Validation loss decreased (0.046552 --> 0.042583).  Saving model ...
-Epoch: 9, Val_rmse: 0.0426
-Results saved to seed_10_epoch_10_beataml_rna_train_results_table.txt

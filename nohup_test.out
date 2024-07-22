@@ -1,8 +1,0 @@
-creating transformer data
-  0%|          | 0/203 [00:00<?, ?it/s]/qfs/people/moon515/mpnst_smile_model/gnn_utils.py:253: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at ../torch/csrc/utils/tensor_new.cpp:275.)
-  data = Data(tokens=torch.tensor([tokens], dtype=torch.long),
-100%|██████████| 203/203 [00:00<00:00, 3314.89it/s]
-creating transformer data
-  0%|          | 0/3613 [00:00<?, ?it/s]  7%|▋         | 259/3613 [00:00<00:01, 2585.26it/s] 18%|█▊        | 637/3613 [00:00<00:00, 3285.61it/s] 29%|██▊       | 1032/3613 [00:00<00:00, 3585.88it/s] 40%|███▉      | 1433/3613 [00:00<00:00, 3751.19it/s] 51%|█████     | 1831/3613 [00:00<00:00, 3830.36it/s] 62%|██████▏   | 2232/3613 [00:00<00:00, 3888.61it/s] 73%|███████▎  | 2630/3613 [00:00<00:00, 3918.24it/s] 84%|████████▍ | 3031/3613 [00:00<00:00, 3944.64it/s] 95%|█████████▍| 3427/3613 [00:00<00:00, 3947.98it/s]100%|██████████| 3613/3613 [00:00<00:00, 3811.13it/s]
-creating transformer data
-  0%|          | 0/904 [00:00<?, ?it/s] 44%|████▍     | 401/904 [00:00<00:00, 4009.02it/s] 89%|████████▊ | 802/904 [00:00<00:00, 2417.27it/s]100%|██████████| 904/904 [00:00<00:00, 2677.64it/s]
