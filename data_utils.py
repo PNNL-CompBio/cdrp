@@ -543,6 +543,14 @@ def average_auc(df):
     df = df.drop_duplicates(subset=['improve_sample_id', 'improve_drug_id'])
     return df
 
+def average_ic50(df):
+    # This will convert non-numeric values to NaN
+    df['ic50'] = pd.to_numeric(df['ic50'], errors='coerce')
+    df['ic50'] = df.groupby(['improve_sample_id', 'improve_drug_id'])['ic50'].transform('mean')
+    df = df.drop_duplicates(subset=['improve_sample_id', 'improve_drug_id'])
+    return df
+
+
 # updated version of coderdata
 def average_dose_response_value(df):
     # This will convert non-numeric values to NaN

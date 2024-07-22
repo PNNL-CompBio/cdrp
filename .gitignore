@@ -4,3 +4,4 @@ previous_SLURM/
 shared_input/
 tmp/
 coderdata_input.zip
+models/

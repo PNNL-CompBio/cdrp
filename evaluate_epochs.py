@@ -10,6 +10,70 @@ from deeptta_rna_model import Model
 import pandas as pd 
 import os
 import argparse
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import pearsonr, spearmanr
+
+def calculate_statistics(true_values, predicted_values):
+    # Ensure both are numpy arrays and flatten predicted_values if it's a list of arrays
+    true_values = np.array(true_values)
+    if isinstance(predicted_values[0], np.ndarray):
+        # Flatten the array if predicted_values consists of arrays (multiple outputs per instance)
+        predicted_values = np.concatenate(predicted_values).ravel()
+    else:
+        predicted_values = np.array(predicted_values)
+
+    # Calculate Pearson correlation coefficient
+    if len(true_values) > 1 and len(predicted_values) > 1:  # Ensure there's enough data to calculate
+        pcc, _ = pearsonr(true_values, predicted_values)
+    else:
+        pcc = np.nan  # Not enough data to calculate correlation
+
+    # Calculate Spearman's rank correlation coefficient
+    if len(true_values) > 1 and len(predicted_values) > 1:
+        srcc, _ = spearmanr(true_values, predicted_values)
+    else:
+        srcc = np.nan
+
+    # Calculate sample size
+    sample_size = len(true_values)
+
+    return pcc, srcc, sample_size
+
+
+# load trained model and evaluate and plot the results
+load_trained_model = True
+
+def predict(model, test_loader, device):
+    true_values = []
+    predicted_values = []
+    with torch.no_grad():
+        for data in test_loader:
+            data = data.to(device)
+            outputs = model(data)
+            predicted_values.extend(outputs.cpu().numpy())
+            true_values.extend(data.y.cpu().numpy())
+    return true_values, predicted_values
+
+def plot_results(true_values, predicted_values, ckpt_path):
+    # Calculate statistics
+    pcc, srcc, sample_size = calculate_statistics(true_values, predicted_values)
+    
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.scatter(true_values, predicted_values, alpha=0.5)
+    plt.title(f'Comparison of True and Predicted fit_AUC\nCheckpoint: {ckpt_path}\nPCC: {pcc:.3f}, SRCC: {srcc:.3f}, Sample Size: {sample_size}')
+    plt.xlabel('True fit_AUC')
+    plt.ylabel('Predicted fit_AUC')
+    plt.grid(True)
+    plt.plot([min(true_values), max(true_values)], [min(true_values), max(true_values)], 'r--')
+    plt.show()
+
+    # get original path for ckpt_path
+    ckpt_path = os.path.basename(ckpt_path)
+    #save the plot
+    plt.savefig(f'plots/{ckpt_path}_true_vs_predicted.png')
+
 def split_df(df, seed):
     train, val = train_test_split(df, random_state=seed, test_size=0.2, train_size=0.8)
 
@@ -17,15 +81,6 @@ def split_df(df, seed):
     val.reset_index(drop=True, inplace=True)
     return train, val
 
-# all the parameters are set here
-# data_split_seed = 10 # adjust seed here
-# bs = 64
-# lr = 1e-4
-# n_epochs = 100 # test with small number of epochs 
-# test_input_path = "./coderdata_input/MPNST_RNA_seq.csv.gz"
-# train_input_path = "./coderdata_input/beataml_transcriptomics.csv.gz"
-# if you run the model for the first time, set load_trained_model to False
-load_trained_model = False
 selected_gene_df = pd.read_csv("./shared_input/graphDRP_landmark_genes_map.txt", sep='\t')
 def intersect_columns(test_gene_exp, train_gene_exp, selected_gene_df):
     # Extract the gene names from the second column of selected_gene_df
@@ -54,7 +109,8 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
                     test_input_path,
                     test_exp_input_path,
                     test_drugs_input_path, load_trained_model,
-                    study_description, dose_response_metric
+                    study_description, dose_response_metric,
+                    ckpt_path
                     ):
     
     # Convert to absolute paths
@@ -63,12 +119,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     
     # Now, extract the filename for use in constructing new paths
     test_input_filename = os.path.basename(test_input_path)
-    train_input_filename = os.path.basename(train_input_path)
-
-    # # Create tmp directory if it doesn't exist, using the absolute path
-    # tmp_dir = "./tmp"
-    # if not os.path.exists(tmp_dir):
-    #     os.makedirs(tmp_dir)    
+    train_input_filename = os.path.basename(train_input_path)   
 
     if not os.path.exists(os.path.join("./shared_input", test_input_filename+"_wide.tsv")):
         DataProcessor.convert_long_to_wide_format(test_input_path)
@@ -92,7 +143,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     train_exp = pd.read_csv(train_exp_input_path, compression='gzip') if train_exp_input_path.endswith('.gz') else pd.read_csv(train_exp_input_path, sep='\t')
     train_drugs = pd.read_csv(train_drugs_input_path, sep='\t', compression='gzip') if train_drugs_input_path.endswith('.gz') else pd.read_csv(train_drugs_input_path, sep='\t')
     
-    # Use the function in your main logic
+    # would need to add for test_exp later on once the data is updated
     try:
         train_exp = filter_exp_data(train_exp, study_description,dose_response_metric)
     except ValueError as e:
@@ -143,6 +194,23 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     # bealaml: define the train and val datasets
     train_ds = data_creater.create_data(train)
     val_ds = data_creater.create_data(val)
+    
+    # Device configuration
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # Model initialization
+    model = Model(gnn_features=None, encoder_type='transformer', n_genes=len(test_gene_exp.columns))
+    model.to(device)
+
+    # if we have a trained model, skip training and evaluate:
+    if load_trained_model==True:
+        model.load_state_dict(torch.load(ckpt_path))
+        test_loader = DataLoader(test_ds, batch_size=999999, shuffle=False, drop_last=False) # use all for evaluation
+        true_values, predicted_values = predict(model, test_loader, device)
+        # print(true_values)  # Check the type of the first element if not empty
+        # print(predicted_values)  # Same as above
+        plot_results(true_values, predicted_values, ckpt_path)
+        exit()
 
     # bs = 64
     train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
@@ -156,23 +224,11 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     optimizer = adam
 
     # n_epochs = 100
-    ckpt_path = './tmp/best.pt'
 
     early_stopping = EarlyStopping(patience = n_epochs, verbose=True, chkpoint_name = ckpt_path)
     criterion = nn.MSELoss()
 
-    # train the model
-    # if we have a trained model, skip training and evaluate:
-    if load_trained_model:
-        model.load_state_dict(torch.load(ckpt_path))
-        test_rmse, true, pred = test_fn(test_loader, model, device)
-        # test['true'] = true
-        # test['pred'] = pred
-        print(test_rmse) # print the test dataframe with true and pred columns
-        # if args.feature_path:
-        #     test = test[['improve_sample_id', 'smiles', 'improve_chem_id', 'auc', 'true', 'pred']]
-        # test.to_csv( os.path.join(out_dir, 'test_predictions.csv'), index=False )
-        exit()
+    
     # train the model  
     hist = {"train_rmse":[], "val_rmse":[]}
     for epoch in range(0, n_epochs):
@@ -201,10 +257,11 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
         hist["val_rmse"].append(val_rmse)
         # print(f'Epoch: {epoch}, Train_rmse: {train_rmse:.3}, Val_rmse: {val_rmse:.3}')
         print(f'Epoch: {epoch}, Val_rmse: {val_rmse:.3}')
+        model_save_path = f'models/model_seed_{data_split_seed}_epoch_{epoch}.pt'
+        torch.save(model.state_dict(), model_save_path) # save the model for each seed & epoch
+        print("Model saved at", model_save_path)
     model.load_state_dict(torch.load(ckpt_path))
     test_rmse, true, pred = test_fn(test_loader, model, device)
-    # model_save_path = f'models/model_seed_{data_split_seed}.pt'
-    # torch.save(model.state_dict(), model_save_path) # save the model for each seed
     return test_rmse
 
 def main():
@@ -222,6 +279,8 @@ def main():
     parser.add_argument('--output_prefix', type=str, default='broad_CCLE', help='describe the study; output file will be named accordingly')
     parser.add_argument('--study_description', type=str, default='CCLE', help='For broad studies, specify the study name: CCLE or PRISM')
     parser.add_argument('--dose_response_metric', type=str, default='fit_auc', help='Choose dose response metric: fit_auc or fit_ic50')
+    parser.add_argument('--checkpoint_path', type=str, default='models/model_seed_1_epoch_99.pt', help='Path to the model checkpoint to evaluate')
+    
     
     args = parser.parse_args()
     # Convert argparse arguments to variables
@@ -238,8 +297,9 @@ def main():
     output_prefix = args.output_prefix
     study_description = args.study_description
     dose_response_metric = args.dose_response_metric
+    ckpt_path = args.checkpoint_path
 
-    load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
+    # load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
 
     # Call run_experiment or any other logic meant to run when the script is executed directly
     results = {}
@@ -255,7 +315,8 @@ def main():
                                     test_drugs_input_path= test_drugs_input_path,
                                     load_trained_model=load_trained_model,
                                     study_description=study_description,
-                                    dose_response_metric=dose_response_metric)
+                                    dose_response_metric=dose_response_metric,
+                                    ckpt_path=ckpt_path)
         results[seed] = test_rmse
 
     # File path for saving the results

@@ -37,14 +37,16 @@ printenv
 
 # Execute your command with specified arguments
 python /people/moon515/mpnst_smile_model/deep_TTA_RNA_run.py \
-    --data_split_seed 10 \
+    --data_split_seed 1 \
     --n_epochs 100 \
-    --train_omics_input_path /people/moon515/mpnst_smile_model/coderdata_input/beataml_transcriptomics.csv.gz \
-    --train_exp_input_path /people/moon515/mpnst_smile_model/coderdata_input/beataml_experiments.csv.gz \
-    --train_drugs_input_path /people/moon515/mpnst_smile_model/coderdata_input/beataml_drugs.tsv.gz \
-    --test_omics_input_path /people/moon515/mpnst_smile_model/coderdata_input/MPNST_RNA_seq.csv.gz \
-    --test_exp_input_path /people/moon515/mpnst_smile_model/coderdata_input/MPNST_experiments.csv.gz \
-    --test_drugs_input_path /people/moon515/mpnst_smile_model/coderdata_input/MPNST_drugs.tsv.gz \
-    --study_description beataml_test
+    --train_omics_input_path /people/moon515/mpnst_smile_model/3_31_24/beataml_transcriptomics.csv.gz \
+    --train_exp_input_path /people/moon515/mpnst_smile_model/3_31_24/beataml_experiments.tsv \
+    --train_drugs_input_path /people/moon515/mpnst_smile_model/3_31_24/beataml_drugs.tsv \
+    --test_omics_input_path /people/moon515/mpnst_smile_model/old_input/coderdata_input/MPNST_RNA_seq.csv.gz \
+    --test_exp_input_path /people/moon515/mpnst_smile_model/old_input/coderdata_input/MPNST_experiments.csv.gz \
+    --test_drugs_input_path /people/moon515/mpnst_smile_model/old_input/coderdata_input/MPNST_drugs.tsv.gz \
+    --study_description BeatAML \
+    --dose_response_metric fit_auc \
+    --output_prefix beataml_test
 # Wait for background processes to finish
 wait
