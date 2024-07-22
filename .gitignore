@@ -1,7 +1,12 @@
-3_31_24/
+2024_05_08/
+coderdata_0_1_26/
 old_input/
+old_scripts/
 previous_SLURM/
 shared_input/
 tmp/
 coderdata_input.zip
 models/
+plots/
+output/
+EDA/
