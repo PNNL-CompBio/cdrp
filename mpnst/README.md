@@ -114,3 +114,7 @@ python your_script.py --arg1 value1 --arg2 value2
 ```
 
 Replace `your_job_name`, `your_output_file.out`, `your_error_file.err`, `XX:XX:XX`, `your_partition`, `XX`, and `your_script.py --arg1 value1 --arg2 value2` with your specific job details and script arguments.
+
+## Google Slide Presentation - James Moon Internship Project
+
+You can view the presentation with outputs and detailed tutorial on how to use the code [here](https://docs.google.com/presentation/d/1eeSRc0E2Ran2mKjM57sjimsRYh83B3M1/edit?usp=sharing&ouid=111167841248759724862&rtpof=true&sd=true).
