@@ -5,7 +5,6 @@ import numpy as np
 import umap
 import seaborn as sns
 import matplotlib.patches as mpatches
-import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
@@ -14,9 +13,9 @@ from sklearn import preprocessing
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.preprocessing import StandardScaler
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import ExtraTreesRegressor
+import os
 
 
 hcmi = cd.DatasetLoader('hcmi')
@@ -38,9 +37,9 @@ joined_dataset3.transcriptomics= joined_dataset3.transcriptomics[["improve_sampl
 data = joined_dataset3.experiments[joined_dataset3.experiments.dose_response_metric == 'auc']
 data.improve_drug_id.nunique()
 
+# NOTE: Currently using CTRPv2 data.
 ctrpv2 = data[data.study == 'CTRPv2']
-# ctrpv2.to_csv('cl_features/data.csv', index=False)
-# ctrpv2 = pd.read_csv('cl_features/data.csv')
+
 
 
 
@@ -147,6 +146,7 @@ if __name__ == '__main__':
         et.fit(train_x, train_y)
         pred = et.predict(test_x)
 
+        os.makedirs('results', exist_ok=True)
         with open(f'results/{feature_type}_{N_IMP_FEATURES}_test_true.pkl', 'wb') as f:
             pickle.dump(test_y, f)
         

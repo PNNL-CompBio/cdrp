@@ -7,6 +7,7 @@ import seaborn as sns
 import matplotlib.patches as mpatches
 import numpy as np
 import pickle
+import os
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 # from sklearn.ensemble import ExtraTreesClassifier
@@ -47,6 +48,7 @@ def create_features(joined_dataset3, feature_type):
     le = preprocessing.LabelEncoder()
     le.fit(cl.cancer_type)
     cl['cancer_type_int'] = le.transform(cl.cancer_type)
+
     cl.to_csv(f'cl_features/{feature_type}_features.csv', index=False)
 
 
@@ -72,6 +74,6 @@ if __name__ == '__main__':
     joined_dataset3.copy_number = joined_dataset3.copy_number[["improve_sample_id", "copy_number", "entrez_id", "source", "study"]]
 
 
-
+    os.makedirs('cl_features', exist_ok=True)
     for feature_type in ['transcriptomics', 'proteomics', 'copy_number']:
         create_features(joined_dataset3, feature_type)
