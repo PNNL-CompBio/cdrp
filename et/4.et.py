@@ -16,13 +16,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import ExtraTreesRegressor
 import os
+import argparse
 
-
-hcmi = cd.DatasetLoader('hcmi')
-beataml = cd.DatasetLoader('beataml')
-cptac = cd.DatasetLoader('cptac')
-depmap = cd.DatasetLoader('broad_sanger')
-mpnst = cd.DatasetLoader('mpnst')
+DATA_DIR = '../process_data/data'
+hcmi = cd.DatasetLoader('hcmi', DATA_DIR)
+beataml = cd.DatasetLoader('beataml', DATA_DIR)
+cptac = cd.DatasetLoader('cptac', DATA_DIR)
+depmap = cd.DatasetLoader('broad_sanger', DATA_DIR)
+mpnst = cd.DatasetLoader('mpnst', DATA_DIR)
 
 # Join BeatAML and HCMI
 joined_dataset0 = cd.join_datasets(beataml, hcmi)
@@ -44,9 +45,12 @@ ctrpv2 = data[data.study == 'CTRPv2']
 
 
 #### load cl data
-N_IMP_FEATURES = 1000
+
 
 if __name__ == '__main__':
+
+    # N_IMP_FEATURES = 1000
+    N_IMP_FEATURES = 'NONE'
 
     # for feature_type in ['transcriptomics', 'proteomics', 'copy_number']:
     for feature_type in ['multiplier_transcriptomics', 'multiplier_proteomics', 'multiplier_copy_number']:
