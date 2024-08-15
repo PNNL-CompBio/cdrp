@@ -9,9 +9,9 @@ Contains a drug response prediction model with 4 drug enoders
 Scripts to obtain multiplier embeddings
 Run the scripts in the following order.
 
-1. 1.save_coder_data_for_multiplier.py
-2. Copy the data and util folders from the multiplier repository at `https://github.com/greenelab/multi-plier`
-3. Rscript 2.obtain_b_matrix.R
+    1. 1.save_coder_data_for_multiplier.py
+    2. Copy the data and util folders from the multiplier repository at `https://github.com/greenelab/multi-plier`
+    3. Rscript 2.obtain_b_matrix.R
 
 # process_data
 The scripts in this directory are used to create input 'transcriptomics', 'proteomics', 'copy_number' features for machine learning models.
