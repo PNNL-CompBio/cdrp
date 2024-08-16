@@ -40,3 +40,5 @@ apps/app_prot.py is an interactive proteomics data exploration app
 
     1. Create the neccessay input data by running `python  proteomics.py`
     2. Next, launch the app with `streamlit run app_prot.py`
+
+![alt text](apps/umap.png "UMAP")
