@@ -11,20 +11,6 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
-# from pathlib import Path
-# import coderdata as cd
-
-from sklearn.model_selection import train_test_split
-    
-    
-# def download_data_from_coderdata(dir="./coderdata_input"):
-#     #Create Directory, Download Coderdata Data, Return Dir
-#     original_dir = os.getcwd()
-#     Path(dir).mkdir(parents=True, exist_ok=True)
-#     os.chdir(dir)
-#     cd.download_data_by_prefix()
-#     os.chdir(original_dir)
-#     return dir
     
 def split_df(df, seed):
     """
@@ -44,7 +30,6 @@ def split_df(df, seed):
     val.reset_index(drop=True, inplace=True)
     return train, val
 
-load_trained_model = False
 selected_gene_df = pd.read_csv("./shared_input/graphDRP_landmark_genes_map.txt", sep='\t')
 
 def aggregate_duplicate_columns(df):
@@ -142,7 +127,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
                     train_drugs_input_path,
                     test_input_path,
                     test_exp_input_path,
-                    test_drugs_input_path, load_trained_model,
+                    test_drugs_input_path,
                     train_study_description, test_study_description, dose_response_metric,
                     ckpt_path, output_prefix, train_log_transform, test_log_transform
                     ):
@@ -232,7 +217,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
 
     #Test Data: Scale and Log transform (if specified) 
     test_gene_exp = test_gene_exp.set_index('improve_sample_id')
-    if test_log_transform == True:
+    if test_log_transform:
         test_gene_exp = np.log1p(test_gene_exp)
     scaler = StandardScaler()
     test_gene_exp_scaled = scaler.fit_transform(test_gene_exp)
@@ -248,7 +233,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
         train_gene_exp = np.log1p(train_gene_exp)
     scaler = StandardScaler() 
     train_gene_exp_scaled = scaler.fit_transform(train_gene_exp)
-        train_gene_exp_scaled = pd.DataFrame(train_gene_exp_scaled, index=train_gene_exp.index, columns=train_gene_exp.columns) 
+    train_gene_exp_scaled = pd.DataFrame(train_gene_exp_scaled, index=train_gene_exp.index, columns=train_gene_exp.columns) 
     
     # Define the train and val datasets
     data_creater = CreateData(gexp=train_gene_exp_scaled, encoder_type='transformer', metric="dose_response_value", data_path= "shared_input/") 
@@ -267,7 +252,6 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
     early_stopping = EarlyStopping(patience = n_epochs, verbose=True, chkpoint_name = ckpt_path)
     criterion = nn.MSELoss()
 
-        
     # Create a dictionary to store losses for training and validation
     history = {
     "train_loss": [],
@@ -370,8 +354,6 @@ def main():
     ckpt_path = args.checkpoint_path
     train_log_transform = args.train_log_transform
     test_log_transform = args.test_log_transform
-
-    load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
     
     # File path for saving the models
     models_folder = "models"
@@ -403,7 +385,6 @@ def main():
                                     test_input_path=test_input_path,
                                     test_exp_input_path= test_exp_input_path,
                                     test_drugs_input_path= test_drugs_input_path,
-                                    load_trained_model=load_trained_model,
                                     output_prefix=output_prefix,
                                     train_study_description=train_study_description,
                                     test_study_description=test_study_description,

@@ -39,7 +39,6 @@ def split_df(df, seed):
     
     return train, val, test
 
-load_trained_model = False
 selected_gene_df = pd.read_csv("./shared_input/graphDRP_landmark_genes_map.txt", sep='\t')
 
 def intersect_columns(train_gene_exp, selected_gene_df):
@@ -102,9 +101,8 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
                     train_input_path,
                     train_exp_input_path,
                     train_drugs_input_path,
-                    load_trained_model,
                     study_description, dose_response_metric,
-                    ckpt_path, output_prefix, train_log_transform, test_log_transform
+                    ckpt_path, output_prefix, log_transform
                     ):
     
     # Convert to absolute paths
@@ -145,7 +143,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
 
     #Training Data: Scale and Log transform (if specified) 
     train_gene_exp = train_gene_exp.set_index('improve_sample_id')
-    if train_log_transform == True:
+    if log_transform == True:
         train_gene_exp = np.log1p(train_gene_exp)
     scaler = StandardScaler()
     train_gene_exp_scaled = scaler.fit_transform(train_gene_exp)
@@ -233,7 +231,7 @@ def run_experiment(data_split_seed, bs, lr, n_epochs,
         os.makedirs(plots_folder)
         print(f"'{plots_folder}' directory created.")
         
-    # Create a plot
+    # Create plot for current status of model - This generates 3 plots for each seed.
     plt.figure(figsize=(10, 6))
     plt.plot(range(0, len(train_loss)), train_loss, label='Train Loss', linestyle='-', color='b')
     plt.plot(range(0, len(val_loss)), val_loss, label='Val Loss', linestyle='-', color='r')
@@ -259,11 +257,10 @@ def main():
     parser.add_argument('--study_description', type=str, default='CCLE', help='For broad studies, specify the study name: CCLE or PRISM')
     parser.add_argument('--dose_response_metric', type=str, default='fit_auc', help='Choose dose response metric: fit_auc or fit_ic50')
     parser.add_argument('--checkpoint_path', type=str, default='models/model_seed_1_epoch_99.pt', help='Path to the model checkpoint to evaluate')
-    parser.add_argument('--train_log_transform', type=bool, default=False, help='Whether to log-transform the training data')
-    parser.add_argument('--test_log_transform', type=bool, default=False, help='Whether to log-transform the test data')
-
-    args = parser.parse_args()
+    parser.add_argument('--log_transform', type=bool, default=False, help='Whether to log-transform the training data')
+    
     # Convert argparse arguments to variables
+    args = parser.parse_args()
     data_split_seed = args.data_split_seed
     bs = args.bs
     lr = args.lr
@@ -275,22 +272,25 @@ def main():
     study_description = args.study_description
     dose_response_metric = args.dose_response_metric
     ckpt_path = args.checkpoint_path
-    train_log_transform = args.train_log_transform
-    test_log_transform = args.test_log_transform
+    log_transform = args.log_transform
 
-
-    load_trained_model = False  # Assuming this is set elsewhere or needs to be added as an argparse argument
-
+    # File path for saving the models
+    models_folder = "models"
+    if not os.path.exists(models_folder):
+        os.makedirs(models_folder)
+        print(f"'{models_folder}' directory created.")
+        
     # File path for saving the results
     results_folder = "results"
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
         print(f"'{results_folder}' directory created.")
         
-    models_folder = "models"
-    if not os.path.exists(models_folder):
-        os.makedirs(models_folder)
-        print(f"'{models_folder}' directory created.")
+    # File path for saving tmp data
+    tmp_folder = "tmp"
+    if not os.path.exists(tmp_folder):
+        os.makedirs(tmp_folder)
+        print(f"'{tmp_folder}' directory created.")
 
     # Call run_experiment or any other logic meant to run when the script is executed directly
     results = {}
@@ -301,13 +301,11 @@ def main():
                                     train_input_path=train_input_path,
                                     train_exp_input_path=train_exp_input_path,
                                     train_drugs_input_path=train_drugs_input_path,
-                                    load_trained_model=load_trained_model,
                                     output_prefix=output_prefix,
                                     study_description=study_description,
                                     dose_response_metric=dose_response_metric,
                                     ckpt_path=ckpt_path,
-                                    train_log_transform=train_log_transform,
-                                    test_log_transform=test_log_transform)
+                                    log_transform=log_transform)
         results[seed] = test_rmse, pearson_corr, spearman_corr 
             
         # File path for saving the results
